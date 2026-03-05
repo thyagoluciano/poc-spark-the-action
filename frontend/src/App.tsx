@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import BoardPage from "./pages/BoardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Header from "./components/Header";
 
@@ -14,8 +15,8 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<Header />}>
-              <Route path="/" element={<div>Board</div>} />
-              <Route path="/boards/:id" element={<div>Board</div>} />
+              <Route path="/" element={<BoardPage />} />
+              <Route path="/boards/:id" element={<BoardPage />} />
             </Route>
           </Route>
         </Routes>
