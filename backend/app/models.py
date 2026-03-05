@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from sqlalchemy import (
     Column,
     DateTime,
@@ -21,7 +19,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     name = Column(String, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     boards = relationship("Board", back_populates="owner")
 
@@ -32,7 +30,7 @@ class Board(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     owner = relationship("User", back_populates="boards")
     columns = relationship(
@@ -68,7 +66,7 @@ class Task(Base):
     description = Column(Text, nullable=True)
     position = Column(Integer, nullable=False)
     column_id = Column(Integer, ForeignKey("columns.id"), nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     column = relationship("BoardColumn", back_populates="tasks")
