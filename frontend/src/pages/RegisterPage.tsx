@@ -1,7 +1,7 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { AxiosError } from "axios";
+import axios from "axios";
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -20,8 +20,7 @@ export default function RegisterPage() {
       await register(name, email, password);
       navigate("/");
     } catch (err) {
-      const axiosError = err as AxiosError;
-      if (axiosError.response?.status === 409) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
         setError("Este email ja esta em uso. Tente outro ou faca login.");
       } else {
         setError("Erro ao cadastrar. Tente novamente.");

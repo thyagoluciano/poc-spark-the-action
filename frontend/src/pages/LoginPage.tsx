@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import axios from "axios";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -17,8 +18,12 @@ export default function LoginPage() {
     try {
       await login(email, password);
       navigate("/");
-    } catch {
-      setError("Credenciais invalidas. Verifique seu email e senha.");
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        setError("Credenciais invalidas. Verifique seu email e senha.");
+      } else {
+        setError("Erro ao conectar. Tente novamente.");
+      }
     } finally {
       setIsLoading(false);
     }
