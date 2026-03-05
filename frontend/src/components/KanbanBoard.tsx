@@ -73,27 +73,28 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
 
     if (activeId === overId) return;
 
-    const activeColumn = findColumnByTaskId(activeId);
-    if (!activeColumn) return;
+    const activeNumericId = parseInt(activeId.replace("task-", ""), 10);
 
-    // Determina se o over e uma coluna ou uma task
     const isOverColumn = overId.startsWith("column-");
     const overColumn = isOverColumn
       ? findColumnById(overId)
       : findColumnByTaskId(overId);
 
-    if (!overColumn || activeColumn.id === overColumn.id) return;
+    if (!overColumn) return;
 
-    // Move task para a nova coluna (sem posicao definitiva, sera ajustada no dragEnd)
+    // Move task para a nova coluna usando prev para evitar stale closure
     setColumns((prev) => {
-      const activeNumericId = parseInt(activeId.replace("task-", ""), 10);
-      const activeTask = activeColumn.tasks.find(
-        (t) => t.id === activeNumericId,
+      const activeCol = prev.find((col) =>
+        col.tasks.some((t) => t.id === activeNumericId),
       );
+      if (!activeCol) return prev;
+      if (activeCol.id === overColumn.id) return prev;
+
+      const activeTask = activeCol.tasks.find((t) => t.id === activeNumericId);
       if (!activeTask) return prev;
 
       return prev.map((col) => {
-        if (col.id === activeColumn.id) {
+        if (col.id === activeCol.id) {
           return {
             ...col,
             tasks: col.tasks.filter((t) => t.id !== activeNumericId),
@@ -142,8 +143,11 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
 
     const activeNumericId = parseInt(activeId.replace("task-", ""), 10);
 
-    // Salva snapshot para rollback
-    const previousColumns = columns;
+    // Deep copy para evitar stale reference no rollback
+    const previousColumns = columns.map((col) => ({
+      ...col,
+      tasks: [...col.tasks],
+    }));
 
     let updatedColumns: Column[];
 
@@ -238,7 +242,7 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
         </div>
         <DragOverlay>
           {activeTask ? (
-            <div className="shadow-lg">
+            <div className="shadow-lg cursor-grabbing">
               <TaskCard task={activeTask} />
             </div>
           ) : null}
