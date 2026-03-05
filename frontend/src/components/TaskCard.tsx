@@ -3,10 +3,14 @@ import { Task } from "../types";
 interface TaskCardProps {
   task: Task;
   onClick?: () => void;
-  onRefresh: () => void;
+  onRefresh?: () => void;
 }
 
-export default function TaskCard({ task, onClick }: TaskCardProps) {
+export default function TaskCard({
+  task,
+  onClick,
+  onRefresh: _onRefresh,
+}: TaskCardProps) {
   return (
     <div
       className="bg-white shadow-sm rounded-md p-3 cursor-pointer hover:shadow-md transition-shadow"
