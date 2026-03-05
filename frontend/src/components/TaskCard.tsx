@@ -37,10 +37,10 @@ export default function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-white shadow-sm rounded-md p-3 cursor-pointer hover:shadow-md transition-shadow"
+      className="bg-white shadow-sm rounded-md p-3 cursor-pointer hover:shadow-md hover:bg-gray-50 active:scale-[0.98] transition-all"
       onClick={onClick}
     >
-      <p className="text-sm font-medium text-gray-800">{task.title}</p>
+      <p className="text-sm font-medium text-gray-800 truncate">{task.title}</p>
       {task.description && (
         <p className="text-xs text-gray-500 mt-1 line-clamp-2">
           {task.description}
