@@ -1,11 +1,12 @@
+import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Column } from "../types";
+import { Column, Task } from "../types";
 import TaskCard from "./TaskCard";
-import api from "../api/client";
+import TaskModal from "./TaskModal";
 
 interface KanbanColumnProps {
   column: Column;
@@ -13,16 +14,24 @@ interface KanbanColumnProps {
 }
 
 export default function KanbanColumn({ column, onRefresh }: KanbanColumnProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
   const { setNodeRef } = useDroppable({ id: `column-${column.id}` });
   const taskIds = column.tasks.map((task) => `task-${task.id}`);
 
-  const handleAddTask = async () => {
-    try {
-      await api.post(`/columns/${column.id}/tasks`, { title: "Nova tarefa" });
-      onRefresh();
-    } catch {
-      // error silencioso
-    }
+  const handleAddClick = () => {
+    setSelectedTask(undefined);
+    setModalOpen(true);
+  };
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setSelectedTask(undefined);
   };
 
   return (
@@ -37,7 +46,7 @@ export default function KanbanColumn({ column, onRefresh }: KanbanColumnProps) {
           </span>
         </div>
         <button
-          onClick={handleAddTask}
+          onClick={handleAddClick}
           className="text-gray-400 hover:text-gray-600 text-lg leading-none font-medium"
           title="Adicionar tarefa"
         >
@@ -51,10 +60,22 @@ export default function KanbanColumn({ column, onRefresh }: KanbanColumnProps) {
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {column.tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onRefresh={onRefresh} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              onClick={() => handleTaskClick(task)}
+            />
           ))}
         </SortableContext>
       </div>
+
+      <TaskModal
+        isOpen={modalOpen}
+        onClose={handleModalClose}
+        onSave={onRefresh}
+        columnId={column.id}
+        task={selectedTask}
+      />
     </div>
   );
 }
