@@ -11,7 +11,7 @@ from app.schemas import (
     BoardUpdate,
 )
 
-router = APIRouter(prefix="/boards", tags=["boards"])
+router = APIRouter()
 
 DEFAULT_COLUMNS = [
     ("To Do", 0),
