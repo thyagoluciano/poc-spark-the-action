@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 # Auth
@@ -76,9 +76,17 @@ class TaskReorderRequest(BaseModel):
     tasks: list[TaskReorderItem]
 
 
+class StatusResponse(BaseModel):
+    status: str
+
+
 # Column
 class ColumnCreate(BaseModel):
-    title: str
+    title: str = Field(min_length=1)
+
+
+class ColumnUpdate(BaseModel):
+    title: str = Field(min_length=1)
 
 
 class ColumnResponse(BaseModel):
@@ -101,7 +109,11 @@ class ColumnWithTasksResponse(BaseModel):
 
 # Board
 class BoardCreate(BaseModel):
-    title: str
+    title: str = Field(min_length=1)
+
+
+class BoardUpdate(BaseModel):
+    title: str = Field(min_length=1)
 
 
 class BoardResponse(BaseModel):
