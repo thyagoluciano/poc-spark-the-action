@@ -81,6 +81,10 @@ class ColumnCreate(BaseModel):
     title: str
 
 
+class ColumnUpdate(BaseModel):
+    title: str
+
+
 class ColumnResponse(BaseModel):
     id: int
     title: str
@@ -101,6 +105,10 @@ class ColumnWithTasksResponse(BaseModel):
 
 # Board
 class BoardCreate(BaseModel):
+    title: str
+
+
+class BoardUpdate(BaseModel):
     title: str
 
 
