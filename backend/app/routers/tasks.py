@@ -1,5 +1,3 @@
-from typing import Any
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -7,7 +5,14 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import Board, BoardColumn, Task, User
-from app.schemas import TaskCreate, TaskMove, TaskReorderRequest, TaskResponse, TaskUpdate
+from app.schemas import (
+    StatusResponse,
+    TaskCreate,
+    TaskMove,
+    TaskReorderRequest,
+    TaskResponse,
+    TaskUpdate,
+)
 
 router = APIRouter(tags=["tasks"])
 
@@ -108,45 +113,51 @@ def move_task(
     origin_column_id = task.column_id
     old_position = task.position
 
-    if origin_column_id == body.column_id:
-        # Reorder within same column
-        tasks_in_column = (
-            db.query(Task)
-            .filter(Task.column_id == origin_column_id, Task.id != task_id)
-            .order_by(Task.position)
-            .all()
-        )
-        tasks_in_column.insert(body.position, task)
-        for index, t in enumerate(tasks_in_column):
-            t.position = index
-    else:
-        # Remove from origin column: shift tasks up
-        db.query(Task).filter(
-            Task.column_id == origin_column_id, Task.position > old_position
-        ).update({Task.position: Task.position - 1})
+    try:
+        if origin_column_id == body.column_id:
+            # Reorder within same column
+            tasks_in_column = (
+                db.query(Task)
+                .filter(Task.column_id == origin_column_id, Task.id != task_id)
+                .order_by(Task.position)
+                .all()
+            )
+            tasks_in_column.insert(body.position, task)
+            for index, t in enumerate(tasks_in_column):
+                t.position = index
+        else:
+            # Remove from origin column: shift tasks up
+            db.query(Task).filter(
+                Task.column_id == origin_column_id, Task.position > old_position
+            ).update({Task.position: Task.position - 1})
 
-        # Make room in destination column: shift tasks down
-        db.query(Task).filter(
-            Task.column_id == body.column_id, Task.position >= body.position
-        ).update({Task.position: Task.position + 1})
+            # Make room in destination column: shift tasks down
+            db.query(Task).filter(
+                Task.column_id == body.column_id, Task.position >= body.position
+            ).update({Task.position: Task.position + 1})
 
-        task.column_id = body.column_id
-        task.position = body.position
+            task.column_id = body.column_id
+            task.position = body.position
 
-    db.commit()
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
     db.refresh(task)
     return task
 
 
-@router.patch("/tasks/reorder", response_model=dict[str, Any])
+@router.patch("/tasks/reorder", response_model=StatusResponse)
 def reorder_tasks(
     body: TaskReorderRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> dict[str, Any]:
+) -> StatusResponse:
     task_ids = [item.id for item in body.tasks]
+    column_ids = list({item.column_id for item in body.tasks})
 
-    # Validate ownership for all tasks in a single query
+    # Validate ownership of all tasks in a single query
     owned_tasks = (
         db.query(Task)
         .join(BoardColumn)
@@ -161,12 +172,31 @@ def reorder_tasks(
             detail="One or more tasks not found",
         )
 
+    # Validate ownership of all destination columns in a single query
+    owned_columns = (
+        db.query(BoardColumn)
+        .join(Board)
+        .filter(BoardColumn.id.in_(column_ids), Board.owner_id == current_user.id)
+        .all()
+    )
+
+    if len(owned_columns) != len(column_ids):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="One or more destination columns not found",
+        )
+
     task_map = {t.id: t for t in owned_tasks}
 
-    for item in body.tasks:
-        task = task_map[item.id]
-        task.column_id = item.column_id
-        task.position = item.position
+    try:
+        for item in body.tasks:
+            task = task_map[item.id]
+            task.column_id = item.column_id
+            task.position = item.position
 
-    db.commit()
-    return {"status": "ok"}
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    return StatusResponse(status="ok")
