@@ -1,3 +1,8 @@
+import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Column } from "../types";
 import TaskCard from "./TaskCard";
 import api from "../api/client";
@@ -8,12 +13,15 @@ interface KanbanColumnProps {
 }
 
 export default function KanbanColumn({ column, onRefresh }: KanbanColumnProps) {
+  const { setNodeRef } = useDroppable({ id: `column-${column.id}` });
+  const taskIds = column.tasks.map((task) => `task-${task.id}`);
+
   const handleAddTask = async () => {
     try {
       await api.post(`/columns/${column.id}/tasks`, { title: "Nova tarefa" });
       onRefresh();
     } catch {
-      // error silencioso; feedback visual sera adicionado em FE-05
+      // error silencioso
     }
   };
 
@@ -37,10 +45,15 @@ export default function KanbanColumn({ column, onRefresh }: KanbanColumnProps) {
         </button>
       </div>
 
-      <div className="flex flex-col gap-2 px-3 pb-3 overflow-y-auto flex-1">
-        {column.tasks.map((task) => (
-          <TaskCard key={task.id} task={task} onRefresh={onRefresh} />
-        ))}
+      <div
+        ref={setNodeRef}
+        className="flex flex-col gap-2 px-3 pb-3 overflow-y-auto flex-1 min-h-[50px]"
+      >
+        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+          {column.tasks.map((task) => (
+            <TaskCard key={task.id} task={task} onRefresh={onRefresh} />
+          ))}
+        </SortableContext>
       </div>
     </div>
   );
