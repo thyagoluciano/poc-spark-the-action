@@ -10,6 +10,14 @@ class Token(BaseModel):
     token_type: str
 
 
+class RegisterResponse(BaseModel):
+    id: int
+    email: str
+    name: str
+    access_token: str
+    token_type: str
+
+
 # User
 class UserCreate(BaseModel):
     email: EmailStr

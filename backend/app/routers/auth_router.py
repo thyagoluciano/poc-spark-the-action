@@ -9,12 +9,12 @@ from app.auth import (
 )
 from app.database import get_db
 from app.models import User
-from app.schemas import UserCreate, UserLogin, UserResponse
+from app.schemas import RegisterResponse, UserCreate, UserLogin, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED, response_model=RegisterResponse)
 def register(body: UserCreate, db: Session = Depends(get_db)) -> dict:
     existing = db.query(User).filter(User.email == body.email).first()
     if existing:
