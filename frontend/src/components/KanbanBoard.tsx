@@ -286,7 +286,9 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
       )}
 
       {reordering && (
-        <div className="absolute inset-0 bg-white/30 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-white/60 z-10 pointer-events-none flex items-center justify-center">
+          <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+        </div>
       )}
 
       <DndContext
