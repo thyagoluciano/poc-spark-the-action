@@ -20,9 +20,38 @@ interface KanbanBoardProps {
   boardId: number;
 }
 
+function BoardSkeleton() {
+  return (
+    <div className="flex gap-4 md:gap-6 overflow-x-auto p-4 md:p-6 flex-1">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="bg-gray-100 rounded-lg min-w-[280px] md:min-w-[300px] flex flex-col animate-pulse"
+        >
+          <div className="px-4 py-3 flex items-center gap-2">
+            <div className="h-4 bg-gray-300 rounded w-24" />
+            <div className="h-4 bg-gray-300 rounded w-6" />
+          </div>
+          <div className="flex flex-col gap-2 px-3 pb-3">
+            {[1, 2, 3].map((j) => (
+              <div key={j} className="bg-white rounded-md p-3">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function KanbanBoard({ boardId }: KanbanBoardProps) {
   const [board, setBoard] = useState<BoardDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
+  const [reorderError, setReorderError] = useState<string | null>(null);
   const [columns, setColumns] = useState<Column[]>([]);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
@@ -31,10 +60,13 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
   );
 
   const fetchBoard = useCallback(async () => {
+    setError(null);
     try {
       const { data } = await api.get<BoardDetail>(`/boards/${boardId}`);
       setBoard(data);
       setColumns(data.columns);
+    } catch {
+      setError("Erro ao carregar board. Verifique sua conexao.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +114,6 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
 
     if (!overColumn) return;
 
-    // Move task para a nova coluna usando prev para evitar stale closure
     setColumns((prev) => {
       const activeCol = prev.find((col) =>
         col.tasks.some((t) => t.id === activeNumericId),
@@ -125,6 +156,7 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setActiveTask(null);
+    setReorderError(null);
 
     if (!over) return;
 
@@ -143,7 +175,6 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
 
     const activeNumericId = parseInt(activeId.replace("task-", ""), 10);
 
-    // Deep copy para evitar stale reference no rollback
     const previousColumns = columns.map((col) => ({
       ...col,
       tasks: [...col.tasks],
@@ -152,7 +183,6 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
     let updatedColumns: Column[];
 
     if (activeColumn.id === overColumn.id && !isOverColumn) {
-      // Reordenar dentro da mesma coluna
       const overNumericId = parseInt(overId.replace("task-", ""), 10);
       const activeIndex = activeColumn.tasks.findIndex(
         (t) => t.id === activeNumericId,
@@ -173,7 +203,6 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
         return col;
       });
     } else {
-      // Ja foi movido no dragOver; apenas recalcula posicoes
       updatedColumns = columns.map((col) => ({
         ...col,
         tasks: col.tasks.map((t, idx) => ({
@@ -186,7 +215,6 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
 
     setColumns(updatedColumns);
 
-    // Coleta todas as tasks afetadas para o PATCH
     const reorderPayload = updatedColumns.flatMap((col) =>
       col.tasks.map((t) => ({
         id: t.id,
@@ -195,18 +223,42 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
       })),
     );
 
+    setReordering(true);
     try {
       await api.patch("/tasks/reorder", { tasks: reorderPayload });
     } catch {
-      // Reverter ao estado anterior
       setColumns(previousColumns);
+      setReorderError("Erro ao reordenar. A ordem foi revertida.");
+      setTimeout(() => setReorderError(null), 3000);
+    } finally {
+      setReordering(false);
     }
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        Carregando...
+      <div className="flex flex-col h-full">
+        <div className="px-4 md:px-6 pt-4 md:pt-6 pb-2">
+          <div className="h-6 bg-gray-200 rounded w-40 animate-pulse" />
+        </div>
+        <BoardSkeleton />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4">
+        <p className="text-gray-600">{error}</p>
+        <button
+          onClick={() => {
+            setLoading(true);
+            fetchBoard();
+          }}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
+        >
+          Tentar novamente
+        </button>
       </div>
     );
   }
@@ -220,10 +272,23 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-6 pt-6 pb-2">
-        <h2 className="text-xl font-bold text-gray-800">{board.title}</h2>
+    <div className="flex flex-col h-full relative">
+      <div className="px-4 md:px-6 pt-4 md:pt-6 pb-2">
+        <h2 className="text-lg md:text-xl font-bold text-gray-800">
+          {board.title}
+        </h2>
       </div>
+
+      {reorderError && (
+        <div className="mx-4 md:mx-6 mb-2 p-2 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+          {reorderError}
+        </div>
+      )}
+
+      {reordering && (
+        <div className="absolute inset-0 bg-white/30 z-10 pointer-events-none" />
+      )}
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -231,7 +296,7 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-6 overflow-x-auto p-6 flex-1">
+        <div className="flex gap-4 md:gap-6 overflow-x-auto p-4 md:p-6 flex-1">
           {columns.map((column) => (
             <KanbanColumn
               key={column.id}
