@@ -40,12 +40,12 @@ class UserLogin(BaseModel):
 
 # Task
 class TaskCreate(BaseModel):
-    title: str
+    title: str = Field(min_length=1)
     description: Optional[str] = None
 
 
 class TaskUpdate(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(default=None, min_length=1)
     description: Optional[str] = None
 
 
@@ -63,17 +63,17 @@ class TaskResponse(BaseModel):
 
 class TaskMove(BaseModel):
     column_id: int
-    position: int
+    position: int = Field(ge=0)
 
 
 class TaskReorderItem(BaseModel):
     id: int
     column_id: int
-    position: int
+    position: int = Field(ge=0)
 
 
 class TaskReorderRequest(BaseModel):
-    tasks: list[TaskReorderItem]
+    tasks: list[TaskReorderItem] = Field(min_length=1)
 
 
 class StatusResponse(BaseModel):
