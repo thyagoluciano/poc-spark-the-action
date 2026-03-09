@@ -36,7 +36,7 @@ export default function KanbanColumn({ column, onRefresh }: KanbanColumnProps) {
 
   return (
     <div
-      className={`bg-gray-100 rounded-lg min-w-[280px] md:min-w-[300px] flex flex-col max-h-full transition-colors ${
+      className={`bg-gray-100 rounded-lg min-w-[280px] w-[280px] lg:flex-1 lg:w-auto lg:min-w-[280px] lg:max-w-[450px] flex-shrink-0 lg:flex-shrink flex flex-col max-h-full transition-colors ${
         isOver ? "bg-blue-50 ring-2 ring-blue-200" : ""
       }`}
     >

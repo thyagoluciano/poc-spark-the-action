@@ -4,6 +4,7 @@ import {
   DragOverlay,
   closestCorners,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragStartEvent,
@@ -57,6 +58,9 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
   );
 
   const fetchBoard = useCallback(async () => {
@@ -298,7 +302,7 @@ export default function KanbanBoard({ boardId }: KanbanBoardProps) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 md:gap-6 overflow-x-auto p-4 md:p-6 flex-1">
+        <div className="flex gap-4 md:gap-6 overflow-x-auto p-4 md:p-6 flex-1 min-h-0">
           {columns.map((column) => (
             <KanbanColumn
               key={column.id}
