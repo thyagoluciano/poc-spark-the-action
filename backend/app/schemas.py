@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, model_validator
 
 
 # Auth
@@ -39,6 +39,12 @@ class TaskCreate(BaseModel):
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+
+    @model_validator(mode="after")
+    def check_at_least_one_field(self) -> "TaskUpdate":
+        if self.title is None and self.description is None:
+            raise ValueError("At least one field (title or description) must be provided")
+        return self
 
 
 class TaskResponse(BaseModel):
