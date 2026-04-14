@@ -46,6 +46,4 @@ export interface RegisterResponse {
   id: number;
   email: string;
   name: string;
-  access_token: string;
-  token_type: string;
 }
