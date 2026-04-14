@@ -23,7 +23,9 @@ class Board(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False)
-    owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    owner_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     owner: Mapped["User"] = relationship("User", back_populates="boards")
@@ -41,7 +43,9 @@ class Column(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
-    board_id: Mapped[int] = mapped_column(Integer, ForeignKey("boards.id"), nullable=False)
+    board_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("boards.id"), nullable=False
+    )
 
     board: Mapped["Board"] = relationship("Board", back_populates="columns")
     tasks: Mapped[list["Task"]] = relationship(
@@ -59,7 +63,9 @@ class Task(Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
-    column_id: Mapped[int] = mapped_column(Integer, ForeignKey("columns.id"), nullable=False)
+    column_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("columns.id"), nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow

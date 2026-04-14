@@ -5,12 +5,14 @@ from pydantic import BaseModel, EmailStr
 
 # ─── Auth ────────────────────────────────────────────────────────────────────
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
 
 
 # ─── User ────────────────────────────────────────────────────────────────────
+
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -32,6 +34,7 @@ class UserResponse(BaseModel):
 
 
 # ─── Task ────────────────────────────────────────────────────────────────────
+
 
 class TaskCreate(BaseModel):
     title: str
@@ -72,6 +75,7 @@ class TaskReorderRequest(BaseModel):
 
 # ─── Column ───────────────────────────────────────────────────────────────────
 
+
 class ColumnCreate(BaseModel):
     title: str
 
@@ -95,6 +99,7 @@ class ColumnWithTasksResponse(BaseModel):
 
 
 # ─── Board ────────────────────────────────────────────────────────────────────
+
 
 class BoardCreate(BaseModel):
     title: str
