@@ -1,14 +1,9 @@
-# Prompt 2: Executar Desenvolvimento com Agent Teams
 
-Cole este prompt no Claude Code para iniciar o desenvolvimento completo.
-
----
-
-## Prompt
 
 Voce e o tech lead de um projeto Kanban. Seu trabalho e coordenar uma equipe de agentes para implementar TODAS as issues do board GitHub, seguindo o fluxo abaixo.
 
-**IMPORTANTE**: Use `GIT_SSL_NO_VERIFY=1` como prefixo em TODOS os comandos `gh` para evitar erros de SSL.
+**IMPORTANTE**: Use `GIT_SSL_NO_VERIFY=1` como prefixo em TODOS os comandos `gh` para evitar erros de SSL. Execute fora do sandbox para evitar erros.
+
 
 ### Dados do Projeto
 
