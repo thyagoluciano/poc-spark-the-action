@@ -10,7 +10,6 @@ import { User } from "../types";
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -21,9 +20,6 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token")
-  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,7 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         .catch(() => {
           localStorage.removeItem("token");
-          setToken(null);
         })
         .finally(() => {
           setIsLoading(false);
@@ -47,45 +42,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(email: string, password: string) {
-    const response = await api.post<{ access_token: string }>(
-      "/auth/login",
-      new URLSearchParams({ username: email, password })
-    );
-    const newToken = response.data.access_token;
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
+    const response = await api.post<{ access_token: string }>("/auth/login", {
+      email,
+      password,
+    });
+    localStorage.setItem("token", response.data.access_token);
 
     const meResponse = await api.get<User>("/auth/me");
     setUser(meResponse.data);
   }
 
   async function register(name: string, email: string, password: string) {
-    const response = await api.post<User>("/auth/register", {
-      name,
-      email,
-      password,
-    });
-    const loginResponse = await api.post<{ access_token: string }>(
-      "/auth/login",
-      new URLSearchParams({ username: email, password })
-    );
-    const newToken = loginResponse.data.access_token;
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
-    setUser(response.data);
+    const response = await api.post("/auth/register", { name, email, password });
+    const { access_token, ...userData } = response.data;
+    localStorage.setItem("token", access_token);
+    setUser({ id: userData.id, email: userData.email, name: userData.name });
   }
 
   function logout() {
     localStorage.removeItem("token");
-    setToken(null);
     setUser(null);
     window.location.href = "/login";
   }
 
   return (
-    <AuthContext.Provider
-      value={{ user, token, login, register, logout, isLoading }}
-    >
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
