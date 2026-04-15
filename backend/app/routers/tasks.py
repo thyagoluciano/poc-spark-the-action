@@ -83,6 +83,8 @@ def reorder_tasks(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> dict:
+    # Supports cross-column reorder: frontend sends all updated positions after a drag-and-drop.
+    # Tasks from different columns are expected in a single batch update.
     task_ids = [item.id for item in payload.tasks]
 
     tasks_in_db = (
@@ -101,13 +103,20 @@ def reorder_tasks(
 
     tasks_by_id = {task.id: task for task in tasks_in_db}
 
-    for item in payload.tasks:
-        task = tasks_by_id[item.id]
-        task.column_id = item.column_id
-        task.position = item.position
-        task.updated_at = datetime.now(timezone.utc)
+    try:
+        for item in payload.tasks:
+            task = tasks_by_id[item.id]
+            task.column_id = item.column_id
+            task.position = item.position
+            task.updated_at = datetime.now(timezone.utc)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reorder tasks",
+        )
 
-    db.commit()
     return {"status": "ok"}
 
 
