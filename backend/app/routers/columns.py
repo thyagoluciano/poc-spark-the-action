@@ -20,8 +20,13 @@ def _get_board_or_404(board_id: int, user_id: int, db: Session) -> Board:
 
 
 def _get_column_or_404(column_id: int, user_id: int, db: Session) -> Column:
-    column = db.query(Column).filter(Column.id == column_id).first()
-    if column is None or column.board.owner_id != user_id:
+    column = (
+        db.query(Column)
+        .join(Board)
+        .filter(Column.id == column_id, Board.owner_id == user_id)
+        .first()
+    )
+    if column is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Column not found"
         )
