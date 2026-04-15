@@ -80,6 +80,10 @@ class ColumnCreate(BaseModel):
     title: str
 
 
+class ColumnUpdate(BaseModel):
+    title: str
+
+
 class ColumnResponse(BaseModel):
     model_config = {"from_attributes": True}
 
@@ -102,6 +106,10 @@ class ColumnWithTasksResponse(BaseModel):
 
 
 class BoardCreate(BaseModel):
+    title: str
+
+
+class BoardUpdate(BaseModel):
     title: str
 
 
