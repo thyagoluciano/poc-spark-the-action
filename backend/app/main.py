@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -7,9 +9,14 @@ from app.routers import boards as boards_router
 from app.routers import columns as columns_router
 from app.routers import tasks as tasks_router
 
-Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Kanban API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
+app = FastAPI(title="Kanban API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
