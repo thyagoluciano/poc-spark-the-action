@@ -69,6 +69,7 @@ class Task(Base):
         Integer, ForeignKey("columns.id"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    # Must be set explicitly on every UPDATE operation
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     column: Mapped["Column"] = relationship("Column", back_populates="tasks")
