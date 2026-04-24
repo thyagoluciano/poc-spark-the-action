@@ -15,7 +15,9 @@ class User(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
-    boards: Mapped[list["Board"]] = relationship("Board", back_populates="owner")
+    boards: Mapped[list["Board"]] = relationship(
+        "Board", back_populates="owner", cascade="all, delete-orphan"
+    )
 
 
 class Board(Base):
@@ -67,8 +69,6 @@ class Task(Base):
         Integer, ForeignKey("columns.id"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.now()
-    )
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     column: Mapped["Column"] = relationship("Column", back_populates="tasks")

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 # Auth schemas
@@ -12,8 +12,8 @@ class Token(BaseModel):
 # User schemas
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str
-    name: str
+    password: str = Field(min_length=8)
+    name: str = Field(min_length=1, max_length=100)
 
 
 class UserResponse(BaseModel):
@@ -31,7 +31,7 @@ class UserLogin(BaseModel):
 
 # Task schemas
 class TaskCreate(BaseModel):
-    title: str
+    title: str = Field(min_length=1, max_length=200)
     description: str | None = None
 
 
@@ -69,7 +69,7 @@ class TaskReorderRequest(BaseModel):
 
 # Column schemas
 class ColumnCreate(BaseModel):
-    title: str
+    title: str = Field(min_length=1, max_length=200)
 
 
 class ColumnResponse(BaseModel):
@@ -92,7 +92,7 @@ class ColumnWithTasksResponse(BaseModel):
 
 # Board schemas
 class BoardCreate(BaseModel):
-    title: str
+    title: str = Field(min_length=1, max_length=200)
 
 
 class BoardResponse(BaseModel):
