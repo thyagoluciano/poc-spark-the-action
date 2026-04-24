@@ -32,12 +32,12 @@ class UserLogin(BaseModel):
 # Task schemas
 class TaskCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=2000)
 
 
 class TaskUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=200)
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=2000)
 
 
 class TaskResponse(BaseModel):
@@ -53,14 +53,14 @@ class TaskResponse(BaseModel):
 
 
 class TaskMove(BaseModel):
-    column_id: int
-    position: int
+    column_id: int = Field(ge=1)
+    position: int = Field(ge=0)
 
 
 class TaskReorderItem(BaseModel):
-    id: int
-    column_id: int
-    position: int
+    id: int = Field(ge=1)
+    column_id: int = Field(ge=1)
+    position: int = Field(ge=0)
 
 
 class TaskReorderRequest(BaseModel):

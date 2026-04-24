@@ -1,18 +1,20 @@
 import logging
-import os
+
+from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
 
 _DEFAULT_SECRET_KEY = "dev-secret-key-change-in-production"
 
+JWT_ALGORITHM = "HS256"
 
-class Settings:
-    SECRET_KEY: str = os.getenv("SECRET_KEY") or _DEFAULT_SECRET_KEY
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./kanban.db")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
-        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
-    )
-    ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
+
+class Settings(BaseSettings):
+    SECRET_KEY: str = _DEFAULT_SECRET_KEY
+    DATABASE_URL: str = "sqlite:///./kanban.db"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
+
+    model_config = {"env_file": ".env"}
 
 
 settings = Settings()
