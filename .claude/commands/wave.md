@@ -75,6 +75,24 @@ GIT_SSL_NO_VERIFY=1 gh project item-edit \
 
 Limitacao do Agent Teams: apenas um time ativo por sessao. Sempre faca TeamDelete antes de TeamCreate.
 
+**Caso especial — Wave de security scan (ex: Wave 7):**
+Se a wave nao tem implementacao de codigo (apenas scan/revisao), pule TeamCreate/TeamDelete
+e lance o agente diretamente SEM `isolation: "worktree"` e SEM `team_name`:
+```
+Agent(
+  subagent_type: "security-reviewer",
+  mode: "bypassPermissions",
+  name: "sec-scan",
+  description: "SEC-XX: scan completo do repositorio",
+  prompt: <template SecurityScan preenchido>
+)
+```
+Neste caso, pule os PASSOs 4–6 (sem PR para revisar) e va direto ao PASSO 7 (mover para Done).
+
+---
+
+**Caso normal — Wave com implementacao de codigo:**
+
 ```
 TeamCreate(team_name: "dev-wave-$ARGUMENTS")
 ```
@@ -123,25 +141,44 @@ TeamDelete("dev-wave-$ARGUMENTS")
 TeamCreate("review-wave-$ARGUMENTS")
 ```
 
-No MESMO response, para cada PR em paralelo:
+No MESMO response, lance **um par de revisores por PR**. Se a wave teve 2 PRs em paralelo,
+lance 4 agentes; se teve 1 PR, lance 2 agentes:
 
 ```
+# PR do backend (se existir)
 Agent(
   subagent_type: "code-reviewer",
   team_name: "review-wave-$ARGUMENTS",
-  name: "rev-01",
-  description: "Code review PR #N",
-  prompt: <template CodeReview preenchido>
+  name: "rev-be",
+  description: "Code review PR #N_BE",
+  prompt: <template CodeReview preenchido com PR #N_BE>
 )
-
 Agent(
   subagent_type: "security-reviewer",
   team_name: "review-wave-$ARGUMENTS",
-  name: "sec-01",
-  description: "Security review PR #N",
-  prompt: <template SecurityReview preenchido>
+  name: "sec-be",
+  description: "Security review PR #N_BE",
+  prompt: <template SecurityReview preenchido com PR #N_BE>
+)
+
+# PR do frontend (se existir)
+Agent(
+  subagent_type: "code-reviewer",
+  team_name: "review-wave-$ARGUMENTS",
+  name: "rev-fe",
+  description: "Code review PR #N_FE",
+  prompt: <template CodeReview preenchido com PR #N_FE>
+)
+Agent(
+  subagent_type: "security-reviewer",
+  team_name: "review-wave-$ARGUMENTS",
+  name: "sec-fe",
+  description: "Security review PR #N_FE",
+  prompt: <template SecurityReview preenchido com PR #N_FE>
 )
 ```
+
+O gate de qualidade (PASSO 6) exige APROVADO em TODOS os revisores antes de mergear qualquer PR.
 
 ---
 
@@ -284,6 +321,30 @@ RELATORIO_SEC:
 - issue (arquivo:linha) — explicacao e remediation
 ---
 Veredicto: SEGURO / VULNERABILIDADES ENCONTRADAS
+```
+
+---
+
+## Template — Security scan (wave sem PR, ex: Wave 7)
+
+```
+Security scan completo do repositorio thyagoluciano/poc-spark-the-action.
+Diretorio local: /Users/zupper/Documents/develop/poc-spark-the-action
+
+Execute em ordem:
+1. snyk_code_scan em backend/
+2. snyk_code_scan em frontend/
+3. snyk_sca_scan em backend/requirements.txt
+4. snyk_sca_scan em frontend/package.json
+5. Revise manualmente: JWT validation, ownership checks, CORS config, token storage no frontend
+6. Retorne relatorio completo com findings por severidade (CRITICO, ALTO, MEDIO, BAIXO)
+7. Conclua com "SEGURO" ou "VULNERABILIDADES ENCONTRADAS: [lista]"
+
+Se VULNERABILIDADES ENCONTRADAS: para cada issue CRITICO/ALTO, rode:
+GIT_SSL_NO_VERIFY=1 gh issue create \
+  --repo thyagoluciano/poc-spark-the-action \
+  --title "SEC: DESCRICAO_DA_VULNERABILIDADE" \
+  --body "Arquivo: ARQUIVO\nLinha: LINHA\nSeveridade: NIVEL\nRemediation: DESCRICAO"
 ```
 
 ---
