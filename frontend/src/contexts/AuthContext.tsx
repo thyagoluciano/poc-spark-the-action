@@ -22,14 +22,18 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token"),
-  );
+  const [token, setToken] = useState<string | null>(() => {
+    const stored = localStorage.getItem("token");
+    return stored && /^[\w-]+\.[\w-]+\.[\w-]+$/.test(stored) ? stored : null;
+  });
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+    const raw = localStorage.getItem("token");
+    const storedToken =
+      raw && /^[\w-]+\.[\w-]+\.[\w-]+$/.test(raw) ? raw : null;
+    if (!storedToken && raw) localStorage.removeItem("token");
     if (storedToken) {
       api
         .get<User>("/auth/me")
