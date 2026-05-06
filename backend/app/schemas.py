@@ -98,8 +98,17 @@ class ColumnWithTasksResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# Column schemas update
+class ColumnUpdate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+
+
 # Board schemas
 class BoardCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+
+
+class BoardUpdate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
 
 
