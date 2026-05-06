@@ -37,7 +37,10 @@
       "Bash(export:*)",
       "Bash(swift:*)",
       "Bash(xcodebuild:*)",
-      "Bash(xcrun:*)"
+      "Bash(xcrun:*)",
+      "Bash(mkdir -p /Users/zupper/Documents/develop/poc-spark-the-action/.claude/commands)",
+      "Bash(rm /Users/zupper/Documents/develop/poc-spark-the-action/.claude/skills/wave.md)",
+      "Bash(rmdir /Users/zupper/Documents/develop/poc-spark-the-action/.claude/skills)"
     ]
   }
 }
