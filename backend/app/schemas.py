@@ -24,6 +24,14 @@ class UserResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class UserRegisterResponse(BaseModel):
+    id: int
+    email: str
+    name: str
+    access_token: str
+    token_type: str = "bearer"
+
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
