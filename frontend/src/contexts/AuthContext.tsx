@@ -22,24 +22,20 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() => {
-    const stored = localStorage.getItem("token");
-    return stored && /^[\w-]+\.[\w-]+\.[\w-]+$/.test(stored) ? stored : null;
-  });
+  const [token, setToken] = useState<string | null>(
+    sessionStorage.getItem("token"),
+  );
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const raw = localStorage.getItem("token");
-    const storedToken =
-      raw && /^[\w-]+\.[\w-]+\.[\w-]+$/.test(raw) ? raw : null;
-    if (!storedToken && raw) localStorage.removeItem("token");
+    const storedToken = sessionStorage.getItem("token");
     if (storedToken) {
       api
         .get<User>("/auth/me")
         .then((res) => setUser(res.data))
         .catch(() => {
-          localStorage.removeItem("token");
+          sessionStorage.removeItem("token");
           setToken(null);
         })
         .finally(() => setIsLoading(false));
@@ -54,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     });
     const { access_token } = res.data;
-    localStorage.setItem("token", access_token);
+    sessionStorage.setItem("token", access_token);
     setToken(access_token);
     const meRes = await api.get<User>("/auth/me");
     setUser(meRes.data);
@@ -67,13 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     });
     const { access_token, ...userData } = res.data;
-    localStorage.setItem("token", access_token);
+    sessionStorage.setItem("token", access_token);
     setToken(access_token);
     setUser({ id: userData.id, name: userData.name, email: userData.email });
   }
 
   function logout() {
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     setUser(null);
     setToken(null);
     navigate("/login");
