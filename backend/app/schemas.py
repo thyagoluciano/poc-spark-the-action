@@ -80,6 +80,10 @@ class ColumnCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
 
 
+class ColumnUpdate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+
+
 class ColumnResponse(BaseModel):
     id: int
     title: str
@@ -100,6 +104,10 @@ class ColumnWithTasksResponse(BaseModel):
 
 # Board schemas
 class BoardCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+
+
+class BoardUpdate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
 
 
